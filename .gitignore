@@ -1,0 +1,16 @@
+# secrets — never commit
+.env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# local run artifacts
+*.log
+.eval_out/
+
+# generated at build time by deploy.sh from config/models.yaml
+taki_model/serving/Modelfile.rendered
+taki_model/serving/build.env

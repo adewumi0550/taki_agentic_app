@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="ha">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TAKI — Mai ba da shawara kan noma</title>
+<meta name="theme-color" content="#1b6b3a">
+<style>
+  :root{
+    --green:#1b6b3a; --green-deep:#12492a; --green-soft:#e3f1e8;
+    --sand:#f6f1e7; --sand-deep:#eadfcb; --ink:#1e2420; --ink-soft:#5d675f;
+    --card:#ffffff; --line:#e4dccb; --farmer:#1b6b3a; --farmer-ink:#ffffff;
+    --warn:#a0521a; --warn-soft:#fbead9; --ok:#1b6b3a; --radius:18px;
+    --shadow:0 1px 2px rgba(20,30,20,.06),0 8px 24px rgba(20,30,20,.06);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --green:#4fbf7a; --green-deep:#8fe0af; --green-soft:#16301f;
+      --sand:#101512; --sand-deep:#1a221c; --ink:#eef3ee; --ink-soft:#a7b3aa;
+      --card:#182019; --line:#2a3a2e; --farmer:#2c8a52; --farmer-ink:#ffffff;
+      --warn:#f0a86b; --warn-soft:#3a2415; --ok:#4fbf7a;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35); }
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--sand);color:var(--ink);
+    font:16px/1.5 -apple-system,"Segoe UI",Roboto,"Noto Sans",Ubuntu,sans-serif;
+    -webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+  .app{width:100%;max-width:680px;margin:0 auto;flex:1;display:flex;flex-direction:column;min-height:100%}
+
+  header{position:sticky;top:0;z-index:5;background:var(--green);color:#fff;
+    padding:calc(12px + env(safe-area-inset-top)) 16px 12px;display:flex;align-items:center;gap:12px}
+  .mark{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.16);
+    display:grid;place-items:center;font-size:24px;flex:none}
+  .title{flex:1;min-width:0}
+  .title h1{margin:0;font-size:20px;letter-spacing:.5px;line-height:1.1}
+  .title p{margin:2px 0 0;font-size:13px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .status{display:flex;align-items:center;gap:6px;font-size:12px;opacity:.95}
+  .dot{width:9px;height:9px;border-radius:50%;background:#ffd166;box-shadow:0 0 0 3px rgba(255,255,255,.18)}
+  .dot.on{background:#7ef0a8}.dot.off{background:#ff7b7b}
+  .lang{display:flex;border:1px solid rgba(255,255,255,.45);border-radius:999px;overflow:hidden;font-size:12px;font-weight:600}
+  .lang button{background:transparent;color:#fff;border:0;padding:5px 10px;cursor:pointer;font:inherit}
+  .lang button.active{background:#fff;color:var(--green-deep)}
+
+  main{flex:1;padding:16px 14px 8px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;overscroll-behavior:contain}
+  .msg{display:flex;gap:10px;max-width:92%;animation:pop .18s ease-out}
+  @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .msg.taki{align-self:flex-start}
+  .msg.farmer{align-self:flex-end;flex-direction:row-reverse}
+  .avatar{width:34px;height:34px;border-radius:50%;background:var(--green-soft);color:var(--green-deep);
+    display:grid;place-items:center;font-size:18px;flex:none;margin-top:2px}
+  .bubble{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:12px 14px;box-shadow:var(--shadow);white-space:pre-wrap;word-wrap:break-word;font-size:17px}
+  .msg.taki .bubble{border-top-left-radius:6px}
+  .msg.farmer .bubble{background:var(--farmer);color:var(--farmer-ink);border-color:transparent;border-top-right-radius:6px}
+  .meta{font-size:12px;color:var(--ink-soft);margin:6px 2px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;
+    background:var(--green-soft);color:var(--green-deep);font-weight:600;font-size:11px}
+  .badge.warn{background:var(--warn-soft);color:var(--warn)}
+  .registry{display:inline-flex;align-items:center;gap:6px;background:var(--warn-soft);color:var(--warn);
+    border:1px dashed var(--warn);border-radius:10px;padding:3px 9px;font-weight:700;font-size:15px;
+    white-space:normal;line-height:1.3;vertical-align:baseline;margin:2px 0}
+  .typing .bubble{color:var(--ink-soft);font-style:italic;display:flex;gap:8px;align-items:center}
+  .typing i{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:blink 1.2s infinite}
+  .typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+
+  .chips{display:flex;gap:8px;overflow-x:auto;padding:4px 14px 10px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;
+    padding:9px 14px;font:inherit;font-size:14px;cursor:pointer;box-shadow:var(--shadow)}
+  .chip:active{transform:scale(.98)}
+
+  form{position:sticky;bottom:0;background:var(--sand);padding:8px 12px calc(12px + env(safe-area-inset-bottom));
+    display:flex;gap:10px;align-items:flex-end;border-top:1px solid var(--line)}
+  textarea{flex:1;resize:none;border:1px solid var(--line);background:var(--card);color:var(--ink);
+    border-radius:16px;padding:13px 14px;font:inherit;font-size:17px;line-height:1.35;max-height:140px;outline:none}
+  textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(27,107,58,.15)}
+  .send{height:50px;padding:0 18px;border:0;border-radius:16px;background:var(--green);color:#fff;
+    font:inherit;font-weight:700;font-size:16px;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .send:disabled{opacity:.55;cursor:default}
+  footer{font-size:12px;color:var(--ink-soft);text-align:center;padding:6px 16px 10px;line-height:1.35}
+  .banner{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn);border-radius:12px;
+    padding:10px 12px;font-size:14px;display:none}
+  .banner.show{display:block}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="mark">🌾</div>
+    <div class="title">
+      <h1>TAKI</h1>
+      <p data-i18n="tagline">Mai ba da shawara kan noma — Arewacin Najeriya</p>
+    </div>
+    <div class="status"><span class="dot" id="dot"></span><span id="statusText" data-i18n="checking">Ana duba…</span></div>
+    <div class="lang"><button id="langHa" class="active">HA</button><button id="langEn">EN</button></div>
+  </header>
+
+  <main id="chat">
+    <div class="banner" id="banner"></div>
+    <div class="msg taki">
+      <div class="avatar">🌾</div>
+      <div>
+        <div class="bubble" data-i18n="welcome">Sannu! Ni ne TAKI. Tambaye ni game da kwari, cututtukan shuka, lokacin shuka, ko kula da gona. Ka rubuta da Hausa ko Turanci.</div>
+        <div class="meta"><span class="badge" data-i18n="noDoseBadge">Ba na bayar da adadin magani</span></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="chips" id="chips"></div>
+
+  <form id="form">
+    <textarea id="q" rows="1" data-i18n-ph="placeholder" placeholder="Rubuta tambayarka a nan…" autocomplete="off"></textarea>
+    <button class="send" id="send" type="submit"><span data-i18n="send">Aika</span> ➤</button>
+  </form>
+  <footer data-i18n="footer">TAKI ba ya bayar da adadin magani, gauraya, ko kwanakin jira. Duba lakabin kwalba ko tambayi jami'in noma na yankinka.</footer>
+</div>
+
+<script>
+(() => {
+  // ---- copy ---------------------------------------------------------------
+  const I18N = {
+    ha: {
+      tagline: "Mai ba da shawara kan noma — Arewacin Najeriya",
+      checking: "Ana duba…", online: "A shirye", offline: "Ba a samu ba",
+      welcome: "Sannu! Ni ne TAKI. Tambaye ni game da kwari, cututtukan shuka, lokacin shuka, ko kula da gona. Ka rubuta da Hausa ko Turanci.",
+      noDoseBadge: "Ba na bayar da adadin magani",
+      placeholder: "Rubuta tambayarka a nan…", send: "Aika",
+      thinking: "TAKI na tunani",
+      footer: "TAKI ba ya bayar da adadin magani, gauraya, ko kwanakin jira. Duba lakabin kwalba ko tambayi jami'in noma na yankinka.",
+      registry: "📋 Duba lakabin kwalba", registryTitle: "Adadin yana kan lakabin samfurin da aka rijista — ba daga TAKI ba.",
+      guardOk: "An duba amsa", guardHit: "An cire adadi daga amsa", secs: "d",
+      errorPrefix: "Ba a samu TAKI ba: ",
+      chips: [
+        "Ganyen masarata na juya rawaya daga kasa. Me ke faruwa?",
+        "Yaushe zan shuka gero a Kano idan damina ta fara?",
+        "Akwai kananan kwari a karkashin ganyen wake. Me zan yi?",
+        "Ta yaya zan ajiye hatsi bayan girbi kada kwari su lalata?"
+      ]
+    },
+    en: {
+      tagline: "Farming advisor — northern Nigeria",
+      checking: "Checking…", online: "Ready", offline: "Unavailable",
+      welcome: "Hello! I'm TAKI. Ask me about pests, crop diseases, planting time, or looking after your farm. Write in Hausa or English.",
+      noDoseBadge: "I never give chemical doses",
+      placeholder: "Type your question here…", send: "Send",
+      thinking: "TAKI is thinking",
+      footer: "TAKI never gives doses, mixing ratios or waiting periods. Check the product label or ask your local extension officer.",
+      registry: "📋 Check the product label", registryTitle: "The amount is on the registered product label — never from TAKI.",
+      guardOk: "Reply checked", guardHit: "A quantity was removed from this reply", secs: "s",
+      errorPrefix: "Could not reach TAKI: ",
+      chips: [
+        "My maize leaves are yellowing from the bottom. What is happening?",
+        "When should I plant millet in Kano once the rains begin?",
+        "There are small insects under my cowpea leaves. What should I do?",
+        "How do I store grain after harvest so insects do not spoil it?"
+      ]
+    }
+  };
+  let lang = "ha";
+  try { lang = localStorage.getItem("taki.lang") || "ha"; } catch (_) {}
+
+  const $ = s => document.querySelector(s);
+  const chat = $("#chat"), form = $("#form"), q = $("#q"), send = $("#send"), chips = $("#chips");
+
+  // ---- per-device id, so conversations can be grouped. No personal data. --
+  let farmerId = null;
+  try {
+    farmerId = localStorage.getItem("taki.fid");
+    if (!farmerId) { farmerId = "web-" + Math.random().toString(36).slice(2, 10); localStorage.setItem("taki.fid", farmerId); }
+  } catch (_) { farmerId = "web-anon"; }
+
+  function t(k) { return I18N[lang][k]; }
+  function applyLang() {
+    document.documentElement.lang = lang;
+    document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = t(el.dataset.i18n));
+    document.querySelectorAll("[data-i18n-ph]").forEach(el => el.placeholder = t(el.dataset.i18nPh));
+    $("#langHa").classList.toggle("active", lang === "ha");
+    $("#langEn").classList.toggle("active", lang === "en");
+    chips.innerHTML = "";
+    t("chips").forEach(text => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = text;
+      b.onclick = () => { q.value = text; q.focus(); autosize(); };
+      chips.appendChild(b);
+    });
+    try { localStorage.setItem("taki.lang", lang); } catch (_) {}
+  }
+  $("#langHa").onclick = () => { lang = "ha"; applyLang(); };
+  $("#langEn").onclick = () => { lang = "en"; applyLang(); };
+
+  // ---- rendering ----------------------------------------------------------
+  const PLACEHOLDER = "<DOSE_FROM_REGISTRY>";
+  function renderReply(text) {
+    // Everything is inserted as text nodes; only the placeholder becomes an element.
+    const frag = document.createDocumentFragment();
+    text.split(PLACEHOLDER).forEach((part, i, arr) => {
+      frag.appendChild(document.createTextNode(part.replace(/`/g, "")));
+      if (i < arr.length - 1) {
+        const chip = document.createElement("span"); chip.className = "registry";
+        chip.textContent = t("registry"); chip.title = t("registryTitle");
+        frag.appendChild(chip);
+      }
+    });
+    return frag;
+  }
+  function addMsg(who, contentNode, meta) {
+    const m = document.createElement("div"); m.className = "msg " + who;
+    const av = document.createElement("div"); av.className = "avatar"; av.textContent = who === "taki" ? "🌾" : "👩🏾‍🌾";
+    const col = document.createElement("div");
+    const b = document.createElement("div"); b.className = "bubble"; b.appendChild(contentNode);
+    col.appendChild(b);
+    if (meta) col.appendChild(meta);
+    m.appendChild(av); m.appendChild(col);
+    chat.appendChild(m); chat.scrollTop = chat.scrollHeight;
+    return m;
+  }
+  function typing() {
+    const m = document.createElement("div"); m.className = "msg taki typing";
+    m.innerHTML = `<div class="avatar">🌾</div><div class="bubble"><span>${t("thinking")}</span><i></i><i></i><i></i></div>`;
+    chat.appendChild(m); chat.scrollTop = chat.scrollHeight; return m;
+  }
+  function metaFor(r) {
+    const meta = document.createElement("div"); meta.className = "meta";
+    const badge = document.createElement("span");
+    badge.className = "badge" + (r.dose_guard_triggered ? " warn" : "");
+    badge.textContent = r.dose_guard_triggered ? t("guardHit") : t("guardOk");
+    meta.appendChild(badge);
+    const lat = document.createElement("span");
+    lat.textContent = (r.latency_ms / 1000).toFixed(1) + t("secs") + (r.model_id ? " · " + r.model_id : "");
+    meta.appendChild(lat);
+    return meta;
+  }
+
+  // ---- send ---------------------------------------------------------------
+  async function ask(text) {
+    addMsg("farmer", document.createTextNode(text));
+    q.value = ""; autosize(); send.disabled = true;
+    const tp = typing();
+    try {
+      const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: text, farmer_id: farmerId }) });
+      const data = await res.json();
+      tp.remove();
+      if (!res.ok) throw new Error(data.detail || res.statusText);
+      addMsg("taki", renderReply(data.reply || ""), metaFor(data));
+    } catch (e) {
+      tp.remove();
+      addMsg("taki", document.createTextNode(t("errorPrefix") + e.message));
+    } finally { send.disabled = false; q.focus(); }
+  }
+  form.onsubmit = e => { e.preventDefault(); const v = q.value.trim(); if (v) ask(v); };
+  q.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
+  function autosize() { q.style.height = "auto"; q.style.height = Math.min(q.scrollHeight, 140) + "px"; }
+  q.addEventListener("input", autosize);
+
+  // ---- health -------------------------------------------------------------
+  async function health() {
+    const dot = $("#dot"), st = $("#statusText"), banner = $("#banner");
+    try {
+      const r = await fetch("/api/health"); const d = await r.json();
+      dot.className = "dot " + (d.ok ? "on" : "off"); st.textContent = d.ok ? t("online") : t("offline");
+      banner.classList.toggle("show", !d.ok); if (!d.ok) banner.textContent = t("errorPrefix") + (d.error || "");
+    } catch (e) { dot.className = "dot off"; st.textContent = t("offline"); }
+  }
+
+  applyLang(); health(); q.focus();
+})();
+</script>
+</body>
+</html>

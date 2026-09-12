@@ -1,0 +1,29 @@
+# TAKI model package.
+#
+# This is the base Gemma model plus the TAKI system prompt, baked together into
+# a single named Ollama model. Both backends run this same package, so the
+# behaviour you test locally is the behaviour Cloud Run serves.
+#
+# The FROM line below is rewritten at build time from config/models.yaml by
+# render_modelfile.py, used by both build.sh and serving/deploy.sh — do not
+# hardcode a model tag here by hand.
+# The placeholder token is replaced with model.base from that file.
+
+FROM __TAKI_BASE_MODEL__
+
+SYSTEM """__TAKI_SYSTEM_PROMPT__"""
+
+# Low temperature: this is advisory output for people acting on it in a field,
+# not creative writing. We want the boring, repeatable answer.
+PARAMETER temperature 0.3
+PARAMETER top_p 0.9
+
+# Hard cap on reply length. A farmer needs three or four sentences, and an
+# uncapped run on Cloud Run generated 3431 tokens until it hit the context
+# ceiling — 47 seconds of GPU time for one answer. This bounds both latency
+# and cost per request.
+PARAMETER num_predict 400
+
+# Stop the model inventing a follow-up turn on the farmer's behalf.
+PARAMETER stop "<start_of_turn>"
+PARAMETER stop "<end_of_turn>"

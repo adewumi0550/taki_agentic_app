@@ -1,0 +1,30 @@
+# Single source of truth for model IDs.
+# Nothing in this repo may hardcode a model string; everything reads from here.
+# Verified tags and the date they were checked live in MODELS.md.
+
+# The model TAKI serves. Same ID is used for BOTH backends so that what you
+# test locally is what Cloud Run runs.
+model:
+  id: gemma3:4b
+
+  # Alternatives verified on the same date (see MODELS.md). Swap `id` above.
+  alternatives:
+    - id: gemma3:1b        # 815MB  - fastest, lowest quality, CPU-viable
+    - id: gemma3:12b       # 8.1GB  - better quality, still fits one L4
+    - id: gemma4:e4b       # 9.6GB  - newer family, 256K ctx on 12b+
+
+# The Ollama model built from taki_model/Modelfile: base model + TAKI system
+# prompt baked in. deploy.sh builds this inside the image.
+taki_model:
+  name: taki
+  base: gemma3:4b          # must match model.id above
+
+backends:
+  local:
+    base_url: http://localhost:11434/v1
+    auth: none
+  cloudrun:
+    # base_url is the Cloud Run service URL + /v1; supplied at runtime via
+    # TAKI_BASE_URL because it is not known until after the first deploy.
+    base_url: null
+    auth: gcloud_identity_token

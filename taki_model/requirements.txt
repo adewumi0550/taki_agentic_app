@@ -1,0 +1,5 @@
+# The OpenAI SDK is used as a protocol client, not as a route to OpenAI.
+# Both TAKI backends speak the OpenAI /v1/chat/completions wire format, so the
+# same client object drives both. See src/client.py.
+openai>=1.40
+PyYAML>=6.0

@@ -1,0 +1,6 @@
+# MCP server for TAKI. Cloud Run, CPU only, scales to zero.
+mcp>=2.2,<3
+httpx>=0.27
+psycopg[binary]>=3.2
+uvicorn>=0.30
+PyYAML>=6.0
