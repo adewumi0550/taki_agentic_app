@@ -1,10 +1,12 @@
-# TAKI — Week 1, model plane
+# TAKI — Week 3
 
 TAKI is an agrochemical advisory agent for smallholder farmers in northern
 Nigeria, answering in Hausa and English.
 
-**This week is the model plane only.** Three commands work from a clean
-checkout with only `.env` filled in:
+By Week 3 the stack is four tiers: the model plane (Gemma, local + private
+Cloud Run GPU), an MCP server that guards and logs every answer, a farmer chat
+UI, and an ADK multi-agent tier on top. The original model-plane commands still
+work from a clean checkout with only `.env` filled in:
 
 ```bash
 make local     # Gemma answering a Hausa prompt on this machine, via Ollama
@@ -12,9 +14,7 @@ make deploy    # the same model serving from a private Cloud Run URL
 make smoke     # hit that URL, print the reply, prove it is locked down
 ```
 
-There is no retrieval, no registry integration and no farmer-facing surface
-yet. Those come later. What exists now is one model, reachable two ways,
-through one client.
+Higher tiers: `make mcp-*`, `make web-*`, `make agent-*` (see below).
 
 ---
 

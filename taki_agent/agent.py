@@ -14,6 +14,10 @@ with `adk web`, `adk run taki_agent`, or the Runner in smoke_test.py.
 from __future__ import annotations
 
 from google.adk.agents import LlmAgent
+from google.adk.tools import google_search
+from google.adk.tools.agent_tool import AgentTool
+
+from .dose_guard import after_model_dose_guard
 
 from .config import load
 from .mcp_toolset import make_toolset
@@ -23,6 +27,22 @@ _cfg = load()
 # One MCP toolset per specialist, each filtered to just the tools it may use.
 _diagnosis_tools = make_toolset(_cfg.mcp_url, tool_filter=["ask_taki", "taki_info"])
 _dealer_tools = make_toolset(_cfg.mcp_url, tool_filter=["find_dealers"])
+
+# google_search is a built-in tool and cannot be mixed with other tools in one
+# agent, so it lives alone here and is exposed to the dealer agent as a tool.
+web_search_agent = LlmAgent(
+    model=_cfg.model,
+    name="web_search",
+    description="Searches the public web for agro-input / pesticide sellers.",
+    instruction=(
+        "Search the web for agricultural-input or agrochemical sellers "
+        "(agro-dealers, farm-input shops) near the location asked about. Report "
+        "only shop name, town/area and a contact if clearly shown. Do NOT report "
+        "any product prices, doses, mixing ratios or application instructions "
+        "from the pages you read. If you find nothing credible, say so."
+    ),
+    tools=[google_search],
+)
 
 diagnosis_agent = LlmAgent(
     model=_cfg.model,
@@ -46,27 +66,35 @@ diagnosis_agent = LlmAgent(
         "any other language."
     ),
     tools=[_diagnosis_tools],
+    after_model_callback=after_model_dose_guard,
 )
 
 dealer_agent = LlmAgent(
     model=_cfg.model,
     name="dealer_agent",
     description=(
-        "Finds VERIFIED agro-input / pesticide sellers near a location. Use when "
-        "the farmer asks where to buy a product or find a dealer/agro-shop."
+        "Finds agro-input / pesticide sellers near a location. Use when the "
+        "farmer asks where to buy a product or find a dealer/agro-shop."
     ),
     instruction=(
-        "The farmer wants to know where to buy an agro-input. Call the "
-        "`find_dealers` tool with the location they gave (a town, LGA or state) "
-        "and, if they named a product type, the product_class.\n"
-        "Report ONLY the sellers the tool returns. If it returns none, say "
-        "plainly that you have no verified seller on record for that area and "
-        "suggest they ask their local agricultural extension officer. NEVER "
-        "invent a shop name, address or phone number.\n"
+        "The farmer wants to know where to buy an agro-input. Work in TWO steps "
+        "and be clear about which source each seller comes from:\n"
+        "1. FIRST call `find_dealers` with the location (town, LGA or state) and, "
+        "if the farmer named a product type, the product_class. Sellers it "
+        "returns are VERIFIED — present these first and label them as verified.\n"
+        "2. ONLY if `find_dealers` returns none, call the `web_search` tool to "
+        "look for agro-dealers near that location. Present anything it finds as "
+        "UNVERIFIED web results the farmer must confirm before trusting, and "
+        "ALWAYS also tell them to check with their local agricultural extension "
+        "officer.\n"
+        "NEVER invent a shop, address or phone number — only report what a tool "
+        "returned. NEVER include any product dose, price-as-advice, mixing ratio "
+        "or application instruction, even if a web page shows one.\n"
         "Reply ONLY in Hausa or English — whichever the farmer used. Never use "
         "any other language."
     ),
-    tools=[_dealer_tools],
+    tools=[_dealer_tools, AgentTool(agent=web_search_agent)],
+    after_model_callback=after_model_dose_guard,
 )
 
 root_agent = LlmAgent(

@@ -17,3 +17,7 @@ taki_model/serving/build.env
 
 # ADK agent tier venv (python 3.13)
 .venv-agent/
+
+# ADK runtime session store
+taki_agent/.adk/
+**/__pycache__/

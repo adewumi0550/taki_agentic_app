@@ -59,7 +59,7 @@ make agent-deploy  # private, CPU-only Cloud Run service
 Needs `TAKI_MCP_URL` in `.env`, Vertex ADC (`gcloud auth application-default
 login`), and a gcloud identity token for the private MCP server.
 
-## Known limitations (Week-1 demo)
+## Known limitations (Week-3 demo)
 
 - **Identity token is captured once** at toolset construction (ADK fixes the
   connection headers). Google ID tokens last ~1h — fine for `adk web`/`adk run`

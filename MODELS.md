@@ -90,7 +90,7 @@ GPU is attached with `--gpu 1` plus:
 
 Zonal redundancy is **optional**, not required. It is a
 price/reliability tradeoff. This repo defaults to `--no-gpu-zonal-redundancy`
-because it is the cheaper option and a Week-1 advisory prototype does not need
+because it is the cheaper option and a Week-3 advisory prototype does not need
 zonal failover.
 
 ### Supported regions

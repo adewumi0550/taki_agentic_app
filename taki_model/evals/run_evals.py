@@ -4,7 +4,7 @@
 Prints latency, token counts and the model's output. With two backends it
 prints them side by side so local and Cloud Run can be compared directly.
 
-There is no scoring harness here on purpose. Week 1 is about seeing what the
+There is no scoring harness here on purpose. Week 3 is about seeing what the
 model actually does with Hausa, which MODELS.md section 4 records as
 UNVERIFIED. Judgement stays with a human reading the output.
 
