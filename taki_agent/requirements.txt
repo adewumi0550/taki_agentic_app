@@ -1,0 +1,7 @@
+# TAKI multi-agent, built on Google's Agent Development Kit.
+# The agents REASON with Gemini (via Vertex AI) and ACT by calling the TAKI
+# MCP server (ask_taki, find_dealers, ...). ADK bundles the MCP client.
+google-adk==2.9.2
+# Only needed if AGENT_MODEL is switched to the self-hosted Gemma via LiteLLM
+# (see config.py). Harmless otherwise.
+litellm>=1.50

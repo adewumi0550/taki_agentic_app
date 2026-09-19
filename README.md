@@ -58,6 +58,23 @@ taki/
     serving/deploy.sh             idempotent private Cloud Run GPU deploy
     serving/smoke_test.sh         cold/warm timing + the 403 check
     scripts/check_no_doses.sh     fails the build if a dose appears anywhere
+  taki_mcp/                       MCP server: ask_taki, find_dealers, + dose guard, logging
+  taki_web/                       farmer chat UI (MCP client)
+  taki_agent/                     ADK multi-agent tier (Gemini reasons, MCP acts)
+```
+
+## Agent tier (taki_agent)
+
+A Google ADK multi-agent system on top of the MCP server: a root router
+delegates to a `diagnosis_agent` (uses the `ask_taki` tool) and a
+`dealer_agent` (uses `find_dealers`). The agents reason with Gemini (Vertex AI)
+and act only through MCP, so the dose guard and conversation log apply to
+everything they do. See [taki_agent/README.md](taki_agent/README.md).
+
+```bash
+make agent-smoke   # routing + tools end-to-end
+make agent-web     # ADK dev UI at http://127.0.0.1:8000
+make agent-deploy  # private Cloud Run service
 ```
 
 ---

@@ -14,3 +14,6 @@ venv/
 # generated at build time by deploy.sh from config/models.yaml
 taki_model/serving/Modelfile.rendered
 taki_model/serving/build.env
+
+# ADK agent tier venv (python 3.13)
+.venv-agent/

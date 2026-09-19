@@ -50,7 +50,9 @@ make smoke                       # hit the Cloud Run model, prove 403 lockdown
 | `make web-smoke` | health + one chat + 403 check against taki-web | yes |
 | `make mcp-smoke` | MCP client test against taki-mcp + 403 check | yes |
 | `make local` | Gemma answering in Hausa, fully local | no |
-| `make deploy` / `make mcp-deploy` / `make web-deploy` | (re)deploy each service | build only |
+| `make deploy` / `make mcp-deploy` / `make web-deploy` / `make agent-deploy` | (re)deploy each service | build only |
+| `make agent-web` | ADK dev UI for the multi-agent system at :8000 | on each question |
+| `make agent-smoke` | multi-agent routing + tools end-to-end | on each question |
 
 All three Cloud Run services (`taki`, `taki-mcp`, `taki-web`) are private and
 scale to zero. Idle cost is image storage only.

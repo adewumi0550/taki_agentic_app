@@ -29,7 +29,8 @@ endif
 HAUSA_PROMPT ?= Sannu. Ganyen masarata na juya launin rawaya daga kasa zuwa sama. Mene ne ke faruwa, kuma me zan yi?
 
 .PHONY: help venv guard model local deploy smoke evals clean \
-        mcp-local mcp-deploy mcp-smoke web-local web-deploy web-smoke web-open
+        mcp-local mcp-deploy mcp-smoke web-local web-deploy web-smoke web-open \
+        agent-venv agent-web agent-smoke agent-deploy
 
 help:
 	@echo "TAKI — model plane"
@@ -48,6 +49,10 @@ help:
 	@echo "  make web-deploy  Deploy taki-web: private, CPU only                          [Cloud Build only]"
 	@echo "  make web-smoke   health + chat + 403 against taki-web                          [wakes GPU]"
 	@echo "  make web-open    Proxy taki-web to http://localhost:8081 with your credentials"
+	@echo ""
+	@echo "  make agent-web    ADK dev UI for the multi-agent system on :8000   [Gemini + wakes GPU]"
+	@echo "  make agent-smoke  Run the multi-agent smoke test (routing + tools)  [Gemini + wakes GPU]"
+	@echo "  make agent-deploy Deploy taki-agent: private, CPU only              [Cloud Build only]"
 	@echo ""
 	@echo "  Model ID comes from $(PKG)/config/models.yaml — never from a literal."
 
@@ -168,3 +173,39 @@ run-local: $(VENV)/.installed-mcp  ## run the FULL stack locally (MCP :8090 + we
 web-open:
 	@echo "==> http://localhost:8081  (Ctrl-C to stop the proxy)"
 	@gcloud run services proxy $${WEB_SERVICE:-taki-web} --region $${GCP_REGION:-us-central1} --project $${GCP_PROJECT_ID} --port 8081
+
+# ---------------------------------------------------------------------------
+# taki_agent — ADK multi-agent tier (reasons with Gemini, acts via MCP)
+# Uses its OWN python 3.13 venv: ADK's dependency chain does not support 3.14.
+# ---------------------------------------------------------------------------
+
+AGENT_VENV := .venv-agent
+AGENT_PY   := $(CURDIR)/$(AGENT_VENV)/bin/python
+AGENT_ADK  := $(CURDIR)/$(AGENT_VENV)/bin/adk
+PY313      := $(shell command -v python3.13 || echo python3)
+
+$(AGENT_VENV)/.installed: taki_agent/requirements.txt
+	@echo "==> creating agent venv on $(PY313) (ADK needs python < 3.14)"
+	$(PY313) -m venv $(AGENT_VENV)
+	$(AGENT_VENV)/bin/pip install --quiet --upgrade pip
+	$(AGENT_VENV)/bin/pip install --quiet -r taki_agent/requirements.txt 'mcp>=1.24,<2'
+	@touch $@
+
+agent-venv: $(AGENT_VENV)/.installed
+
+# ADK discovers taki_agent/ from the repo root. Requires TAKI_MCP_URL in .env.
+agent-web: agent-venv
+	@echo "==> ADK dev UI at http://127.0.0.1:8000  (pick 'taki_root')"
+	@set -a; [ -f .env ] && . ./.env; set +a; \
+	  GOOGLE_GENAI_USE_VERTEXAI=TRUE GOOGLE_CLOUD_PROJECT=$${GCP_PROJECT_ID} \
+	  GOOGLE_CLOUD_LOCATION=$${GCP_REGION:-us-central1} \
+	  $(AGENT_ADK) web --host 127.0.0.1 --port 8000 .
+
+agent-smoke: agent-venv
+	@set -a; [ -f .env ] && . ./.env; set +a; \
+	  GOOGLE_GENAI_USE_VERTEXAI=TRUE GOOGLE_CLOUD_PROJECT=$${GCP_PROJECT_ID} \
+	  GOOGLE_CLOUD_LOCATION=$${GCP_REGION:-us-central1} \
+	  $(AGENT_PY) -m taki_agent.smoke_test
+
+agent-deploy: agent-venv
+	@./taki_agent/deploy.sh
