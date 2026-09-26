@@ -57,7 +57,7 @@ if [ -n "$DB_INSTANCE" ]; then
   if gcloud secrets describe "$DB_DSN_SECRET" --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
     echo "==> secret '$DB_DSN_SECRET' found; attaching Cloud SQL instance $DB_INSTANCE"
     gcloud projects add-iam-policy-binding "$GCP_PROJECT_ID" \
-      --member="serviceAccount:$SA" --role="roles/cloudsql.client" --quiet >/dev/null
+      --member="serviceAccount:$SA" --role="roles/cloudsql.client" --condition=None --quiet >/dev/null
     gcloud secrets add-iam-policy-binding "$DB_DSN_SECRET" --project="$GCP_PROJECT_ID" \
       --member="serviceAccount:$SA" --role="roles/secretmanager.secretAccessor" --quiet >/dev/null
     DB_FLAGS=(--add-cloudsql-instances="$DB_INSTANCE" --set-secrets="TAKI_DB_DSN=${DB_DSN_SECRET}:latest")

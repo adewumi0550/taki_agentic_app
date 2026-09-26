@@ -62,8 +62,9 @@ diagnosis_agent = LlmAgent(
         "<DOSE_FROM_REGISTRY>, KEEP it exactly and never replace it with a "
         "number — pesticide amounts come only from the product label and the "
         "registry, never from you.\n"
-        "Reply ONLY in Hausa or English — whichever the farmer used. Never use "
-        "any other language."
+        "LANGUAGE: reply in the SAME language as the farmer's message — English "
+        "for an English question, Hausa for a Hausa question. Only these two, and "
+        "do not switch mid-reply."
     ),
     tools=[_diagnosis_tools],
     after_model_callback=after_model_dose_guard,
@@ -90,8 +91,9 @@ dealer_agent = LlmAgent(
         "NEVER invent a shop, address or phone number — only report what a tool "
         "returned. NEVER include any product dose, price-as-advice, mixing ratio "
         "or application instruction, even if a web page shows one.\n"
-        "Reply ONLY in Hausa or English — whichever the farmer used. Never use "
-        "any other language."
+        "LANGUAGE: reply in the SAME language as the farmer's message — English "
+        "for an English question, Hausa for a Hausa question. Only these two, and "
+        "do not switch mid-reply."
     ),
     tools=[_dealer_tools, AgentTool(agent=web_search_agent)],
     after_model_callback=after_model_dose_guard,
@@ -111,8 +113,10 @@ root_agent = LlmAgent(
         "If a message needs both (e.g. 'what is this and where do I buy "
         "treatment'), handle the diagnosis first, then the dealer lookup.\n"
         "Never give a pesticide dose, mixing ratio, or waiting period yourself. "
-        "Always work ONLY in Hausa or English — match the farmer's language and "
-        "never reply in any other language."
+        "LANGUAGE: detect the language of the farmer's message. If it is in "
+        "English, the whole reply must be in English; if it is in Hausa, the "
+        "whole reply must be in Hausa. Use only these two languages, and match "
+        "the farmer's — do not switch."
     ),
     sub_agents=[diagnosis_agent, dealer_agent],
 )

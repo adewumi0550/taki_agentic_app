@@ -30,7 +30,7 @@ gcloud run services add-iam-policy-binding "$MCP_SERVICE" \
   --project="$GCP_PROJECT_ID" --region="$GCP_REGION" \
   --member="serviceAccount:$SA" --role="roles/run.invoker" --quiet >/dev/null
 gcloud projects add-iam-policy-binding "$GCP_PROJECT_ID" \
-  --member="serviceAccount:$SA" --role="roles/aiplatform.user" --quiet >/dev/null
+  --member="serviceAccount:$SA" --role="roles/aiplatform.user" --condition=None --quiet >/dev/null
 
 IMAGE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${AR_REPO:-taki}/${AGENT_SERVICE}:latest"
 echo "==> building $IMAGE"

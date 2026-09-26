@@ -21,3 +21,4 @@ taki_model/serving/build.env
 # ADK runtime session store
 taki_agent/.adk/
 **/__pycache__/
+.DS_Store
