@@ -1,0 +1,29 @@
+{
+  "statements": {
+    "months": 6,
+    "avg_inflow": 1850000,
+    "volatility": "low",
+    "salary_regular": true,
+    "overdraft_days": 2,
+    "dscr": 1.9,
+    "source": "statements.pdf p1-6"
+  },
+  "identity": {
+    "name_match": true,
+    "address_match": true,
+    "sanctions_hit": false,
+    "source": "id_card.pdf, utility.pdf"
+  },
+  "collateral": {
+    "title_clean": true,
+    "valuation": 42000000,
+    "existing_charges": [],
+    "source": "title_deed.pdf p2"
+  },
+  "policy": {
+    "exposure": 20000000,
+    "sector": "agriculture",
+    "dscr": 1.9,
+    "source": "policy_sheet.pdf + credit_policy_v4"
+  }
+}

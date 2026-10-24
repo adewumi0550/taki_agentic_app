@@ -22,3 +22,7 @@ taki_model/serving/build.env
 taki_agent/.adk/
 **/__pycache__/
 .DS_Store
+
+# underwriting / money desk runtime artifacts
+underwriting_desk/budgets/
+*.jsonl

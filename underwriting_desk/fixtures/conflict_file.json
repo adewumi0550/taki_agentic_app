@@ -1,0 +1,31 @@
+{
+  "statements": {
+    "months": 6,
+    "avg_inflow": 310000,
+    "volatility": "high",
+    "salary_regular": false,
+    "overdraft_days": 71,
+    "dscr": 0.74,
+    "source": "statements.pdf p1-6",
+    "note": "cannot service the monthly repayment"
+  },
+  "identity": {
+    "name_match": true,
+    "address_match": true,
+    "sanctions_hit": false,
+    "source": "id_card.pdf"
+  },
+  "collateral": {
+    "title_clean": true,
+    "valuation": 96000000,
+    "existing_charges": [],
+    "source": "title_deed.pdf p2",
+    "note": "security covers the loan twice over"
+  },
+  "policy": {
+    "exposure": 45000000,
+    "sector": "retail",
+    "dscr": 0.74,
+    "source": "policy_sheet.pdf + credit_policy_v4"
+  }
+}
