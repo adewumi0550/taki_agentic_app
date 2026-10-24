@@ -11,9 +11,11 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
-ROOT = Path(__file__).resolve().parent.parent
-BUDGETS = ROOT / "budgets"
-LOG = ROOT / "money_log.jsonl"
+ROOT = Path(__file__).resolve().parent
+# Cloud Run's image is read-only apart from /tmp, so both are env-driven.
+BUDGETS = Path(os.environ.get("BUDGET_DIR", ROOT.parent / "budgets"))
+LOG = Path(os.environ.get("LOG_DIR", ROOT.parent)) / "money_log.jsonl"
+BUDGETS.mkdir(parents=True, exist_ok=True)
 
 # Published planning rules of thumb, not the policy of any named bank.
 BENCH = {"rent": 30, "feeding": 35, "savings": 20, "school": 25, "debt_service": 33}

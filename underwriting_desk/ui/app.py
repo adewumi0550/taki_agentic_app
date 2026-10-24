@@ -1,38 +1,44 @@
-"""The money desk, served locally.
+"""The money desk, one process.
 
-One process: starts the MCP server, mounts the ADK agent behind an AG-UI
-endpoint, and serves the page from the SAME origin so the browser can
-stream from it.
+The MCP server is MOUNTED into this app rather than spawned beside it, so
+there is no subprocess to die and no second port to coordinate. The agents
+still reach their tools over MCP/HTTP -- the boundary is real, it just
+happens to be the same process in this deployment.
 
-    ../.venv-agent/bin/python ui/app.py      ->  http://127.0.0.1:8099
+Local:      ../.venv-agent/bin/python ui/app.py     -> http://127.0.0.1:8099
+Cloud Run:  Procfile runs uvicorn against main:app
 """
 import json
 import os
-import socket
-import subprocess
-import sys
 import time
 import uuid
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-BUDGETS = ROOT / "budgets"
-BUDGETS.mkdir(exist_ok=True)
-sys.path.insert(0, str(HERE))
+BUDGETS = Path(os.environ.get("BUDGET_DIR", ROOT / "budgets"))
+BUDGETS.mkdir(parents=True, exist_ok=True)
 
-MCP_PORT = int(os.environ.get("MCP_PORT", "8787"))
 PORT = int(os.environ.get("PORT", "8099"))
-os.environ.setdefault("MONEY_MCP_URL", f"http://127.0.0.1:{MCP_PORT}/mcp")
+HOST = os.environ.get("HOST", "127.0.0.1")
 
-from fastapi import FastAPI, Request          # noqa: E402
-from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
+# The agents read MONEY_MCP_URL at import, so point it at our own mount first.
+MCP_MOUNT = "/mcpsrv"
+os.environ.setdefault("MONEY_MCP_URL", f"http://127.0.0.1:{PORT}{MCP_MOUNT}/mcp")
 
-from ag_ui_adk import ADKAgent, add_adk_fastapi_endpoint  # noqa: E402
+from fastapi import FastAPI, Request                        # noqa: E402
+from fastapi.responses import FileResponse, JSONResponse    # noqa: E402
+from ag_ui_adk import ADKAgent, add_adk_fastapi_endpoint     # noqa: E402
 
-import agents  # noqa: E402
+import money_mcp                                            # noqa: E402
+import agents                                               # noqa: E402
 
-app = FastAPI(title="money-desk")
+mcp_app = money_mcp.mcp.streamable_http_app()
+
+# FastMCP's session manager lives in its own lifespan; adopt it or the
+# mounted routes 500 on first request.
+app = FastAPI(title="money-desk", lifespan=mcp_app.router.lifespan_context)
+app.mount(MCP_MOUNT, mcp_app)
 
 
 @app.get("/health")
@@ -69,29 +75,7 @@ add_adk_fastapi_endpoint(
 )
 
 
-def start_mcp() -> subprocess.Popen:
-    proc = subprocess.Popen(
-        [sys.executable, str(HERE / "money_mcp.py")],
-        env={**os.environ, "MCP_PORT": str(MCP_PORT)},
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-    )
-    for _ in range(100):
-        if proc.poll() is not None:
-            raise SystemExit("money-desk MCP failed to start")
-        with socket.socket() as s:
-            s.settimeout(0.2)
-            if s.connect_ex(("127.0.0.1", MCP_PORT)) == 0:
-                return proc
-        time.sleep(0.1)
-    proc.terminate()
-    raise SystemExit(f"MCP did not come up on :{MCP_PORT}")
-
-
 if __name__ == "__main__":
     import uvicorn
-    mcp = start_mcp()
     print(f"\n  money desk  ->  http://127.0.0.1:{PORT}\n")
-    try:
-        uvicorn.run(app, host="127.0.0.1", port=PORT, log_level="warning")
-    finally:
-        mcp.terminate()
+    uvicorn.run(app, host=HOST, port=PORT, log_level="warning")
